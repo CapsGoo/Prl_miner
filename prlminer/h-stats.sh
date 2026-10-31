@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-. /home/user/miners/custom/prlminer/h-manifest.conf
+HSTATS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HSTATS_DIR/h-manifest.conf"
 log_name="${CUSTOM_LOG_BASENAME}.log"
 [[ -f $log_name ]] || exit 0
 diffTime=$(( $(date +%s) - $(stat -c %Y "$log_name") ))
