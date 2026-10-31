@@ -21,8 +21,8 @@ mm=$(echo "$line" | sed -nE 's/.*up ([0-9]+)m.*/\1/p'; echo "$line" | sed -nE 's
 up=$(( hh * 3600 + mm * 60 ))
 cfg="${CUSTOM_CONFIG_FILENAME:-/tmp/prlminer.conf}"
 wallet=$(grep -hoP 'prl1[a-z0-9]+' "$cfg" 2>/dev/null | head -1)
-hs=$(jq -cn --arg a "${g0:-0}" --arg b "${g1:-0}" '[((($a|tonumber)*1e12)|floor), ((($b|tonumber)*1e12)|floor)]')
-total_h=$(awk -v t="${total:-0}" 'BEGIN{printf "%d", t*1000000000}')
+hs=$(jq -cn --arg a "${g0:-0}" --arg b "${g1:-0}" '[$a|tonumber, $b|tonumber]')
+total_h=$(awk -v t="${total:-0}" 'BEGIN{printf "%d", t*1000000}')
 temps=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader | jq -cs '.')
 fans=$(nvidia-smi --query-gpu=fan.speed --format=csv,noheader,nounits | jq -cs '.')
 url=$(echo "$tail_text" | grep -oP 'Connected to \K\S+' | tail -n 1)
@@ -32,8 +32,8 @@ stats=$(jq -nc --argjson hs "$hs" --argjson temp "$temps" --argjson fan "$fans" 
   --argjson khs "$total_h" --arg ac "$ac" --arg rj "$rj" --arg st "${st:-0}" \
   --arg uptime "$up" --arg url "$url" --arg user "$wallet" \
   --arg worker "$worker" --arg ver "0.1.0" \
-  '{hs_units:"hs", hs:$hs, khs:$khs, temp:$temp, fan:$fan, ar:[$ac|tonumber,$rj|tonumber], as:$st,
+  '{hs_units:"th", hs:$hs, khs:$khs, temp:$temp, fan:$fan, ar:[$ac|tonumber,$rj|tonumber], as:$st,
     uptime:$uptime, ver:$ver, dual:false, pools:$url,
     workers:[{url:$url, alive:true, user:$user, worker:$worker}], rejected_share:0, invalid_share:0,
     accepted_share:($ac|tonumber), stale_share:($st|tonumber)}')
-khs=$(awk -v t="${total:-0}" 'BEGIN{printf "%d", t*1000000000}')
+khs=$(awk -v t="${total:-0}" 'BEGIN{printf "%d", t*1000000}')
