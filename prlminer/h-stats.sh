@@ -22,7 +22,7 @@ up=$(( hh * 3600 + mm * 60 ))
 cfg="${CUSTOM_CONFIG_FILENAME:-/tmp/prlminer.conf}"
 wallet=$(grep -hoP 'prl1[a-z0-9]+' "$cfg" 2>/dev/null | head -1)
 hs=$(jq -cn --arg a "${g0:-0}" --arg b "${g1:-0}" '[((($a|tonumber)*1e12)|floor), ((($b|tonumber)*1e12)|floor)]')
-total_h=$(jq -cn --arg t "${total:-0}" '$t|tonumber*1e12|floor')
+total_h=$(awk -v t="${total:-0}" 'BEGIN{printf "%d", t*1000000000}')
 temps=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader | jq -cs '.')
 fans=$(nvidia-smi --query-gpu=fan.speed --format=csv,noheader,nounits | jq -cs '.')
 url=$(echo "$tail_text" | grep -oP 'Connected to \K\S+' | tail -n 1)
