@@ -4,10 +4,10 @@ HSTATS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 log_name="${CUSTOM_LOG_BASENAME}.log"
 [[ -f $log_name ]] || exit 0
 diffTime=$(( $(date +%s) - $(stat -c %Y "$log_name") ))
-(( diffTime > 180 )) && exit 0
+(( diffTime > 180 )) && return 0
 tail_text=$(tail -n 300 "$log_name" | sed -e "s/\x1b\[[0-9;]*m//g")
 line=$(echo "$tail_text" | grep "hashrate" | tail -n 1)
-[[ -z $line ]] && exit 0
+[[ -z $line ]] && return 0
 total=$(echo "$line" | grep -oP 'hashrate \K[0-9]+(\.[0-9]+)?')
 g0=$(echo "$line" | grep -oP 'GPU0 \K[0-9]+(\.[0-9]+)?')
 g1=$(echo "$line" | grep -oP 'GPU1 \K[0-9]+(\.[0-9]+)?')
@@ -28,11 +28,12 @@ fans=$(nvidia-smi --query-gpu=fan.speed --format=csv,noheader,nounits | jq -cs '
 url=$(echo "$tail_text" | grep -oP 'Connected to \K\S+' | tail -n 1)
 worker=$(grep -hoP 'CUSTOM_TEMPLATE="[^"]*\.\K[^"]+' "$cfg" 2>/dev/null | head -1)
 [[ -z $worker ]] && worker="${WORKER_NAME:-Farm-G1}"
-jq -nc --argjson hs "$hs" --argjson temp "$temps" --argjson fan "$fans" \
+stats=$(jq -nc --argjson hs "$hs" --argjson temp "$temps" --argjson fan "$fans" \
   --argjson khs "$total_h" --arg ac "$ac" --arg rj "$rj" --arg st "${st:-0}" \
   --arg uptime "$up" --arg url "$url" --arg user "$wallet" \
   --arg worker "$worker" --arg ver "0.1.0" \
   '{hs_units:"hs", hs:$hs, khs:$khs, temp:$temp, fan:$fan, ar:[$ac|tonumber,$rj|tonumber], as:$st,
     uptime:$uptime, ver:$ver, dual:false, pools:$url,
     workers:[{url:$url, alive:true, user:$user, worker:$worker}], rejected_share:0, invalid_share:0,
-    accepted_share:($ac|tonumber), stale_share:($st|tonumber)}'
+    accepted_share:($ac|tonumber), stale_share:($st|tonumber)}')
+khs=$(awk -v t="${total:-0}" 'BEGIN{printf "%d", t*1000000000}')
